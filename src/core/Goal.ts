@@ -3,9 +3,9 @@ import * as CANNON from "cannon-es";
 import { textureLoader } from "./loaders";
 
 const GROUND_SIZE = {
-  width: 1,
+  width: 2,
   height: 0.2,
-  depth: 1,
+  depth: 2,
 };
 
 export default class Goal {
@@ -30,12 +30,11 @@ export default class Goal {
       new CANNON.Vec3(GROUND_SIZE.width / 2, GROUND_SIZE.height / 2, GROUND_SIZE.depth / 2)
     );
     const physicsMaterial = new CANNON.Material({
-      // @TODO material options 변경
-      // friction: 0,
-      // restitution: 0,
+      friction: 0.3,
+      restitution: 0.3,
     });
     const body = new CANNON.Body({ shape: physicsShape, material: physicsMaterial, mass: 0 });
-    body.position.set(4.5, -10, 4.5);
+    body.position.set(5.5, -10, 5.5);
     this.body = body;
   }
 

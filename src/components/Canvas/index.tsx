@@ -10,14 +10,23 @@ import classNames from "classnames/bind";
 import styles from "./index.module.scss";
 import Goal from "../../core/Goal";
 import Ball from "../../core/Ball";
+import { RotationAxisTypes } from "../../types";
 
 const cx = classNames.bind(styles);
 
+const ACCELERATION = 0.001;
+
 const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const rotationAxisRef = useRef<RotationAxisTypes>("x");
+  const rotationXSpeedRef = useRef<number>(0);
+  const rotationZSpeedRef = useRef<number>(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    const clock = new THREE.Clock();
+
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -47,7 +56,7 @@ const Canvas = () => {
     world.allowSleep = true;
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(5.5, 5.5, 13);
+    camera.position.set(5.5, 5.5, 20);
     scene.add(camera);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -77,9 +86,18 @@ const Canvas = () => {
     ball.display(scene, world);
 
     const draw = () => {
+      const delta = clock.getDelta();
       renderer.render(scene, camera);
       camera.updateMatrix();
-      world.step(1 / 60);
+      world.step(delta);
+
+      if (Math.abs(rotationXSpeedRef.current) > 0.002) {
+        maze.rotate("x", rotationXSpeedRef.current);
+      }
+
+      if (Math.abs(rotationZSpeedRef.current) > 0.002) {
+        maze.rotate("z", rotationZSpeedRef.current);
+      }
 
       maze.update();
       goal.update();
@@ -90,15 +108,48 @@ const Canvas = () => {
 
     draw();
 
+    const handleKeydown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case "ArrowUp": {
+          rotationAxisRef.current = "x";
+          rotationXSpeedRef.current -= ACCELERATION;
+          break;
+        }
+        case "ArrowDown": {
+          rotationAxisRef.current = "x";
+          rotationXSpeedRef.current += ACCELERATION;
+          break;
+        }
+        case "ArrowLeft": {
+          rotationAxisRef.current = "z";
+          rotationZSpeedRef.current += ACCELERATION;
+          break;
+        }
+        case "ArrowRight": {
+          rotationAxisRef.current = "z";
+          rotationZSpeedRef.current -= ACCELERATION;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    };
+
     const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeydown);
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("keydown", handleKeydown);
     };
   }, []);
 

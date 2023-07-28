@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { textureLoader } from "./loaders";
+import { RotationAxisTypes } from "../types";
 
 const GROUND_SIZE = {
   width: 10,
@@ -30,19 +31,11 @@ const CUBE_POSITIONS: { [key: string]: boolean[] } = {
 export default class Maze {
   private group: THREE.Group;
   private ground: THREE.Mesh;
-  private groundBody: CANNON.Body;
   private cubes: THREE.Mesh[] = [];
-  private cubeBodies: CANNON.Body[] = [];
+  private body: CANNON.Body;
 
   constructor() {
     this.group = new THREE.Group();
-
-    // @TODO 색 변경
-    const physicsMaterial = new CANNON.Material({
-      // @TODO material options 변경
-      // friction: 0,
-      // restitution: 0,
-    });
 
     const groundTexture = textureLoader.load("tile.jpeg");
     groundTexture.wrapS = THREE.RepeatWrapping;
@@ -67,8 +60,12 @@ export default class Maze {
     const groundPhysicsShape = new CANNON.Box(
       new CANNON.Vec3(GROUND_SIZE.width / 2, GROUND_SIZE.height / 2, GROUND_SIZE.depth / 2)
     );
-    const groundPhysicsBody = new CANNON.Body({ shape: groundPhysicsShape, material: physicsMaterial, mass: 0 });
-    this.groundBody = groundPhysicsBody;
+    const groundPhysicsMaterial = new CANNON.Material({
+      friction: 0.3,
+      restitution: 0.3,
+    });
+    const groundPhysicsBody = new CANNON.Body({ shape: groundPhysicsShape, material: groundPhysicsMaterial, mass: 0 });
+    this.body = groundPhysicsBody;
 
     const cubeGeometry = new THREE.BoxGeometry(CUBE_SIZE.width, CUBE_SIZE.height, CUBE_SIZE.depth);
     const cubeMaterial = new THREE.MeshStandardMaterial({
@@ -81,9 +78,6 @@ export default class Maze {
     originCube.receiveShadow = true;
     originCube.castShadow = true;
 
-    const cubePhysicsShape = new CANNON.Box(
-      new CANNON.Vec3(CUBE_SIZE.width / 2, CUBE_SIZE.height / 2, CUBE_SIZE.depth / 2)
-    );
     Object.entries(CUBE_POSITIONS).forEach(([key, value]) => {
       const z = parseFloat(key);
 
@@ -91,12 +85,15 @@ export default class Maze {
         if (v) {
           const x = idx - 4.5;
           const cube = originCube.clone();
+          cube.position.set(x, 1, z);
           this.cubes.push(cube);
           this.group.add(cube);
 
-          const cubePhysicsBody = new CANNON.Body({ shape: cubePhysicsShape, material: physicsMaterial, mass: 0 });
-          cubePhysicsBody.position.set(x, 1, z);
-          this.cubeBodies.push(cubePhysicsBody);
+          const cubePhysicsShape = new CANNON.Box(
+            new CANNON.Vec3(CUBE_SIZE.width / 2, CUBE_SIZE.height / 2, CUBE_SIZE.depth / 2)
+          );
+
+          this.body.addShape(cubePhysicsShape, new CANNON.Vec3(x, 1, z));
         }
       });
     });
@@ -104,31 +101,24 @@ export default class Maze {
 
   display(scene: THREE.Scene, world: CANNON.World) {
     scene.add(this.group);
-    // scene.add(this.ground);
-    world.addBody(this.groundBody);
-
-    // this.cubes.forEach((cube) => {
-    //   scene.add(cube);
-    // });
-
-    this.cubeBodies.forEach((cubeBody) => {
-      world.addBody(cubeBody);
-    });
+    world.addBody(this.body);
   }
 
-  rotate(axis: "x" | "y" | "z", speed: number) {
+  rotate(axis: RotationAxisTypes, speed: number) {
     this.group.rotation[axis] += speed;
   }
 
   update() {
-    const { position: groundPosition, quaternion: groundQuaternion } = this.groundBody;
-    this.ground.position.set(groundPosition.x, groundPosition.y, groundPosition.z);
-    this.ground.quaternion.set(groundQuaternion.x, groundQuaternion.y, groundQuaternion.z, groundQuaternion.w);
-
-    this.cubes.forEach((cube, idx) => {
-      const { position: cubePosition, quaternion: cubeQuaternion } = this.cubeBodies[idx];
-      cube.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-      cube.quaternion.set(cubeQuaternion.x, cubeQuaternion.y, cubeQuaternion.z, cubeQuaternion.w);
-    });
+    const groundWorldPosition = new THREE.Vector3();
+    const groundWorldQuaternion = new THREE.Quaternion();
+    this.ground.getWorldPosition(groundWorldPosition);
+    this.ground.getWorldQuaternion(groundWorldQuaternion);
+    this.body.position.set(groundWorldPosition.x, groundWorldPosition.y, groundWorldPosition.z);
+    this.body.quaternion.set(
+      groundWorldQuaternion.x,
+      groundWorldQuaternion.y,
+      groundWorldQuaternion.z,
+      groundWorldQuaternion.w
+    );
   }
 }

@@ -28,14 +28,21 @@ const CUBE_POSITIONS: { [key: string]: boolean[] } = {
 };
 
 export default class Maze {
+  private group: THREE.Group;
   private ground: THREE.Mesh;
   private groundBody: CANNON.Body;
   private cubes: THREE.Mesh[] = [];
   private cubeBodies: CANNON.Body[] = [];
 
   constructor() {
+    this.group = new THREE.Group();
+
     // @TODO 색 변경
-    const physicsMaterial = new CANNON.Material("maze");
+    const physicsMaterial = new CANNON.Material({
+      // @TODO material options 변경
+      // friction: 0,
+      // restitution: 0,
+    });
 
     const groundTexture = textureLoader.load("tile.jpeg");
     groundTexture.wrapS = THREE.RepeatWrapping;
@@ -55,6 +62,7 @@ export default class Maze {
     ground.receiveShadow = true;
     ground.castShadow = false;
     this.ground = ground;
+    this.group.add(ground);
 
     const groundPhysicsShape = new CANNON.Box(
       new CANNON.Vec3(GROUND_SIZE.width / 2, GROUND_SIZE.height / 2, GROUND_SIZE.depth / 2)
@@ -85,6 +93,7 @@ export default class Maze {
           const cube = originCube.clone();
           cube.position.set(x, 1, z);
           this.cubes.push(cube);
+          this.group.add(cube);
 
           const cubePhysicsBody = new CANNON.Body({ shape: cubePhysicsShape, material: physicsMaterial, mass: 0 });
           this.cubeBodies.push(cubePhysicsBody);
@@ -94,15 +103,17 @@ export default class Maze {
   }
 
   display(scene: THREE.Scene, world: CANNON.World) {
-    scene.add(this.ground);
+    scene.add(this.group);
+    this.group.position.y += 5;
     world.addBody(this.groundBody);
 
-    this.cubes.forEach((cube) => {
-      scene.add(cube);
-    });
     this.cubeBodies.forEach((cubeBody) => {
       world.addBody(cubeBody);
     });
+  }
+
+  rotate(axis: "x" | "y" | "z", speed: number) {
+    this.group.rotation[axis] += speed;
   }
 
   update() {

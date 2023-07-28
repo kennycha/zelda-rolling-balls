@@ -8,6 +8,7 @@ import vertexShader from "../../core/shaders/skybox/vertex.glsl?raw";
 import fragmentShader from "../../core/shaders/skybox/fragment.glsl?raw";
 import classNames from "classnames/bind";
 import styles from "./index.module.scss";
+import Goal from "../../core/Goal";
 
 const cx = classNames.bind(styles);
 
@@ -45,7 +46,7 @@ const Canvas = () => {
     world.allowSleep = true;
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(5, 7, 5);
+    camera.position.set(5.5, 5.5, 13);
     scene.add(camera);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -53,7 +54,7 @@ const Canvas = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.minDistance = 3;
-    controls.maxDistance = 15;
+    controls.maxDistance = 20;
 
     const hemisphereLight = new THREE.HemisphereLight(0xffffff);
     hemisphereLight.castShadow = true;
@@ -68,12 +69,16 @@ const Canvas = () => {
     const maze = new Maze();
     maze.display(scene, world);
 
+    const goal = new Goal();
+    goal.display(scene, world);
+
     const draw = () => {
       renderer.render(scene, camera);
       camera.updateMatrix();
       world.step(1 / 60);
 
       maze.update();
+      goal.update();
 
       requestAnimationFrame(draw);
     };

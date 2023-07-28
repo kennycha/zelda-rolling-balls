@@ -9,6 +9,7 @@ import fragmentShader from "../../core/shaders/skybox/fragment.glsl?raw";
 import classNames from "classnames/bind";
 import styles from "./index.module.scss";
 import Goal from "../../core/Goal";
+import Ball from "../../core/Ball";
 
 const cx = classNames.bind(styles);
 
@@ -72,6 +73,9 @@ const Canvas = () => {
     const goal = new Goal();
     goal.display(scene, world);
 
+    const ball = new Ball();
+    ball.display(scene, world);
+
     const draw = () => {
       renderer.render(scene, camera);
       camera.updateMatrix();
@@ -79,6 +83,7 @@ const Canvas = () => {
 
       maze.update();
       goal.update();
+      ball.update();
 
       requestAnimationFrame(draw);
     };

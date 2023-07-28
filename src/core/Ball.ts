@@ -39,4 +39,13 @@ export default class Ball {
     this.mesh.position.set(position.x, position.y, position.z);
     this.mesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
   }
+
+  checkIsOut() {
+    return this.mesh.position.y < -30;
+  }
+
+  dispose(scene: THREE.Scene, world: CANNON.World) {
+    scene.remove(this.mesh);
+    world.removeBody(this.body);
+  }
 }

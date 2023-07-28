@@ -64,7 +64,7 @@ const Canvas = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.minDistance = 3;
-    controls.maxDistance = 20;
+    controls.maxDistance = 25;
 
     const hemisphereLight = new THREE.HemisphereLight(0xffffff);
     hemisphereLight.castShadow = true;
@@ -82,7 +82,7 @@ const Canvas = () => {
     const goal = new Goal();
     goal.display(scene, world);
 
-    const ball = new Ball();
+    let ball = new Ball();
     ball.display(scene, world);
 
     const draw = () => {
@@ -102,6 +102,13 @@ const Canvas = () => {
       maze.update();
       goal.update();
       ball.update();
+
+      if (ball.checkIsOut()) {
+        ball.dispose(scene, world);
+        const newBall = new Ball();
+        newBall.display(scene, world);
+        ball = newBall;
+      }
 
       requestAnimationFrame(draw);
     };

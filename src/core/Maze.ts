@@ -83,10 +83,10 @@ export default class Maze {
         if (v) {
           const x = idx - 4.5;
           const cube = originCube.clone();
+          cube.position.set(x, 1, z);
           this.cubes.push(cube);
 
           const cubePhysicsBody = new CANNON.Body({ shape: cubePhysicsShape, material: physicsMaterial, mass: 0 });
-          cubePhysicsBody.position.set(x, 1, z);
           this.cubeBodies.push(cubePhysicsBody);
         }
       });
@@ -106,14 +106,15 @@ export default class Maze {
   }
 
   update() {
-    const { position: groundPosition, quaternion: groundQuaternion } = this.groundBody;
-    this.ground.position.set(groundPosition.x, groundPosition.y, groundPosition.z);
-    this.ground.quaternion.set(groundQuaternion.x, groundQuaternion.y, groundQuaternion.z, groundQuaternion.w);
+    const { position: groundPosition, quaternion: groundQuaternion } = this.ground;
+    this.groundBody.position.set(groundPosition.x, groundPosition.y, groundPosition.z);
+    this.groundBody.quaternion.set(groundQuaternion.x, groundQuaternion.y, groundQuaternion.z, groundQuaternion.w);
 
     this.cubes.forEach((cube, idx) => {
-      const { position: cubePosition, quaternion: cubeQuaternion } = this.cubeBodies[idx];
-      cube.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-      cube.quaternion.set(cubeQuaternion.x, cubeQuaternion.y, cubeQuaternion.z, cubeQuaternion.w);
+      const { position: cubePosition, quaternion: cubeQuaternion } = cube;
+      const cubeBody = this.cubeBodies[idx];
+      cubeBody.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
+      cubeBody.quaternion.set(cubeQuaternion.x, cubeQuaternion.y, cubeQuaternion.z, cubeQuaternion.w);
     });
   }
 }

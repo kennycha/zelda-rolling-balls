@@ -34,7 +34,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: kennycha.github.io/zelda-rolling-balls
+      url: https://kennycha.github.io/zelda-rolling-balls
 
     runs-on: ubuntu-latest
     steps:

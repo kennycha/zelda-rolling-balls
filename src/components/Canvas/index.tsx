@@ -88,7 +88,7 @@ const Canvas = () => {
     const draw = () => {
       const delta = clock.getDelta();
       renderer.render(scene, camera);
-      camera.updateMatrix();
+      controls.update();
       world.step(delta);
 
       if (Math.abs(rotationXSpeedRef.current) > 0.002) {

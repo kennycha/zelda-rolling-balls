@@ -8,20 +8,37 @@ const GROUND_SIZE = {
   depth: 2,
 };
 
+const GROUND_COLORS = {
+  before: 0xd8d9cf,
+  after: 0x377d71,
+};
+
 export default class Goal {
   private mesh: THREE.Mesh;
   private body: CANNON.Body;
+  private beforeMaterial: THREE.MeshStandardMaterial;
+  private afterMaterial: THREE.MeshStandardMaterial;
 
   constructor() {
     const texture = textureLoader.load("wall.jpg");
 
-    const geometry = new THREE.BoxGeometry(GROUND_SIZE.width, GROUND_SIZE.height, GROUND_SIZE.depth);
-    const material = new THREE.MeshStandardMaterial({
+    const beforeMaterial = new THREE.MeshStandardMaterial({
       map: texture,
-      color: 0xd8d9cf,
+      color: GROUND_COLORS.before,
       roughness: 1,
     });
-    const mesh = new THREE.Mesh(geometry, material);
+
+    const afterMaterial = new THREE.MeshStandardMaterial({
+      map: texture,
+      color: GROUND_COLORS.after,
+      roughness: 1,
+    });
+
+    this.beforeMaterial = beforeMaterial;
+    this.afterMaterial = afterMaterial;
+
+    const geometry = new THREE.BoxGeometry(GROUND_SIZE.width, GROUND_SIZE.height, GROUND_SIZE.depth);
+    const mesh = new THREE.Mesh(geometry, beforeMaterial);
     mesh.receiveShadow = true;
     mesh.castShadow = false;
     this.mesh = mesh;
@@ -35,6 +52,9 @@ export default class Goal {
     });
     const body = new CANNON.Body({ shape: physicsShape, material: physicsMaterial, mass: 0 });
     body.position.set(5.5, -10, 5.5);
+    body.addEventListener("collide", () => {
+      this.mesh.material = this.afterMaterial;
+    });
     this.body = body;
   }
 
@@ -47,5 +67,9 @@ export default class Goal {
     const { position, quaternion } = this.body;
     this.mesh.position.set(position.x, position.y, position.z);
     this.mesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+  }
+
+  reset() {
+    this.mesh.material = this.beforeMaterial;
   }
 }

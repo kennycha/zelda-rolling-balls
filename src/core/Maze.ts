@@ -121,4 +121,8 @@ export default class Maze {
       groundWorldQuaternion.w
     );
   }
+
+  resetTransform() {
+    this.group.rotation.set(0, 0, 0);
+  }
 }

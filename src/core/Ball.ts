@@ -22,7 +22,7 @@ export default class Ball {
     const physicsShape = new CANNON.Sphere(BALL_RADIUS);
     const physicsMaterial = new CANNON.Material({
       friction: 0.3,
-      restitution: 0.3,
+      restitution: 1,
     });
     const body = new CANNON.Body({ shape: physicsShape, material: physicsMaterial, mass: 5 });
     body.position.set(-4.5, 10, -4.5);

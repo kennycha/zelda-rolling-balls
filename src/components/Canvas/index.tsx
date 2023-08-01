@@ -18,12 +18,15 @@ const ACCELERATION = 0.001;
 
 const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const resetButtonRef = useRef<HTMLButtonElement>(null);
   const rotationAxisRef = useRef<RotationAxisTypes>("x");
   const rotationXSpeedRef = useRef<number>(0);
   const rotationZSpeedRef = useRef<number>(0);
+  const shouldResetRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !resetButtonRef.current) return;
+    const resetButton = resetButtonRef.current;
 
     const clock = new THREE.Clock();
 
@@ -91,24 +94,26 @@ const Canvas = () => {
       controls.update();
       world.step(delta);
 
-      if (Math.abs(rotationXSpeedRef.current) > 0.002) {
-        maze.rotate("x", rotationXSpeedRef.current);
-      }
+      maze.rotate("x", rotationXSpeedRef.current);
+      maze.rotate("z", rotationZSpeedRef.current);
 
-      if (Math.abs(rotationZSpeedRef.current) > 0.002) {
-        maze.rotate("z", rotationZSpeedRef.current);
+      if (shouldResetRef.current) {
+        maze.resetTransform();
+        goal.reset();
+        maze.update();
+        ball.update();
+        shouldResetRef.current = false;
       }
-
-      maze.update();
-      goal.update();
-      ball.update();
 
       if (ball.checkIsOut()) {
         ball.dispose(scene, world);
-        const newBall = new Ball();
-        newBall.display(scene, world);
-        ball = newBall;
+        ball = new Ball();
+        ball.display(scene, world);
       }
+
+      ball.update();
+      maze.update();
+      goal.update();
 
       requestAnimationFrame(draw);
     };
@@ -150,17 +155,34 @@ const Canvas = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
+    const handleResetButtonClick = () => {
+      rotationXSpeedRef.current = 0;
+      rotationZSpeedRef.current = 0;
+      shouldResetRef.current = true;
+      resetButton.blur();
+    };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     window.addEventListener("keydown", handleKeydown);
+    resetButton.addEventListener("click", handleResetButtonClick);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("keydown", handleKeydown);
+      resetButton.removeEventListener("click", handleResetButtonClick);
     };
   }, []);
 
-  return <div ref={containerRef} className={cx("container")}></div>;
+  return (
+    <div ref={containerRef} className={cx("container")}>
+      <div className={cx("buttonWrapper")}>
+        <button className={cx("resetButton")} ref={resetButtonRef}>
+          reset
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default Canvas;
